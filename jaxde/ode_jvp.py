@@ -38,13 +38,14 @@ def jvp_odeint_all(tangent_all, func, y0, t0, t1, func_args):  # future version 
     return yt, jvp_y
 ad.primitive_jvps[odeint] = jvp_odeint_all
 
+
 #@custom_transforms
 def ode_w_linear_part(func, y0, a0, t0, t1, func_args):
     # Just a wrapper around odeint for dynamics that are linear in a0, but not in y0.
     aug_y0, unpack = ravel_pytree((y0, a0))
     aug_ans = odeint(func, aug_y0, np.array([t0, t1]), func_args)
-    yt, jvp_y = unpack(aug_ans[1])
-    return yt, jvp_y
+    yt, jvp_all = unpack(aug_ans[1])
+    return yt, jvp_all
 
 def odeint_w_linear_part_transpose(cotangent_y0, yt, func, y0, a0, t0, t1):
     assert a0 is None and y0 is not None  # linear in a0 only.
