@@ -37,19 +37,19 @@ def test_odeint_jvp():
     t0 = 0.1
     t1 = 0.2
     y0 = np.linspace(0.1, 0.9, D)
-
-    def f(y, t):
-        return -np.sqrt(t) - y
+    fargs = (0.1, 0.2)
+    def f(y, t, arg1, arg2):
+        return -np.sqrt(t) - y + arg1 - np.mean((y + arg2)**2)
 
     @custom_transforms
-    def odeint2(y0,t1):
-        return odeint(f, y0, np.array([t0, t1]), atol=1e-8, rtol=1e-8)[1]
+    def odeint2(y0,t1,fargs):
+        return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8, rtol=1e-8)[1]
 
-    def odeint2_jvp((y0,t1), (tangent_z,tangent_t1)):
-        return jvp_odeint(f,(y0,t0,t1), (tangent_z,t0,tangent_t1)) #t1 is dummy
+    def odeint2_jvp((y0,t1,fargs), (tangent_z,tangent_t1,tangent_fargs)):
+        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,t0,tangent_t1,tangent_fargs)) #t1 is dummy
     ad.defjvp(odeint2.primitive, odeint2_jvp)
 
-    check_jvp(odeint2, odeint2_jvp, (y0,t1))
+    check_jvp(odeint2, odeint2_jvp, (y0,t1,fargs))
 
 # def wip_odeint_jvp_all():  # change beginning of name to test_ when ready
 #     D = 10

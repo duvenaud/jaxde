@@ -19,21 +19,26 @@ from jaxde.odeint import odeint
 #     yt, jvp_y = unpack(odeint(augmented_dynamics, init_state, np.array([t0, t1]))[1])
 #     return yt, jvp_y
 
-def jvp_odeint(func, (y0, t0, t1),(t_y0,t_t0,t_t1)):
+def jvp_odeint(func, (y0, t0, t1, fargs),(t_y0,t_t0,t_t1,t_fargs)):
 
-   init_state, unpack = ravel_pytree((y0, t_y0))  # get an un-concatenate function
+   init_state, unpack = ravel_pytree((y0, t_y0, np.zeros_like(y0)))  # get an un-concatenate function
 
    def augmented_dynamics(augmented_state, t):
 
-       y, adj_y = unpack(augmented_state)
-       dy_dt, vjp_all = vjp(func, y, t) # dy_dt= f(y,t), vjp_all = (df/dy, df/dt)
-       vjp_a, vjp_t = vjp_all(adj_y) 
-       # dy_dt, vjp_a = jvp(func, (y,t), (adj_y,t_t0))
-       return np.concatenate([dy_dt, vjp_a])
+       y, adj_y, adj_theta = unpack(augmented_state)
 
-   yt, jvp_y = unpack(odeint(augmented_dynamics, init_state, np.array([t0, t1]))[1])
-   jvp_t1 = np.dot(t_t1,func(yt,t1))
-   return yt, jvp_y+jvp_t1
+       func_yt = lambda y: func(y,t,*fargs)
+       dy_dt, vjp_z = vjp(func_yt, y) 
+       vjp_a = vjp_z(adj_y)[0] 
+
+       func_theta = lambda fargs: func(y,t,*fargs)
+       _, jvp_theta = jvp(func_theta, (fargs,), (t_fargs,))
+
+       return np.concatenate([dy_dt, vjp_a, jvp_theta])
+
+   yt, jvp_y, jvp_theta = unpack(odeint(augmented_dynamics, init_state, np.array([t0, t1]))[1])
+   jvp_t1 = np.dot(t_t1,func(yt,t1,*fargs))
+   return yt, jvp_y+jvp_t1+jvp_theta
 
 
 # def jvp_odeint_all(tangent_all, func, y0, t0, t1, func_args):  # future version will take args, and [t]
