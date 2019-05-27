@@ -28,17 +28,20 @@ def jvp_odeint(func, (y0, t0, t1, fargs),(t_y0,t_t0,t_t1,t_fargs)):
        y, adj_y, adj_theta = unpack(augmented_state)
 
        func_yt = lambda y: func(y,t,*fargs)
-       dy_dt, vjp_z = vjp(func_yt, y) 
-       vjp_a = vjp_z(adj_y)[0] 
+       dy_dt, jvp_a = jvp(func_yt, (y,),(adj_y,))
 
-       func_theta = lambda fargs: func(y,t,*fargs)
-       _, jvp_theta = jvp(func_theta, (fargs,), (t_fargs,))
+       _, vjp_y = vjp(func_yt,y)
+       vjp_a = vjp_y(adj_y)[0] 
 
-       return np.concatenate([dy_dt, vjp_a, jvp_theta])
+       func_theta = lambda t, fargs: func(y,t,*fargs) #rename
+       _, jvp_theta = jvp(func_theta, (t,fargs), (t_t0,t_fargs))
+
+       return np.concatenate([dy_dt, jvp_a, jvp_theta])
 
    yt, jvp_y, jvp_theta = unpack(odeint(augmented_dynamics, init_state, np.array([t0, t1]))[1])
    jvp_t1 = np.dot(t_t1,func(yt,t1,*fargs))
-   return yt, jvp_y+jvp_t1+jvp_theta
+
+   return (yt, jvp_y+jvp_t1+jvp_theta)
 
 
 # def jvp_odeint_all(tangent_all, func, y0, t0, t1, func_args):  # future version will take args, and [t]

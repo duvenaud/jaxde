@@ -4,6 +4,7 @@ from __future__ import print_function
 
 
 import jax.numpy as np
+from  numpy.random import randn
 from jax.config import config
 config.update("jax_enable_x64", True)
 
@@ -13,63 +14,70 @@ from jax import custom_transforms, ad
 from jaxde.odeint import odeint
 from jaxde.ode_jvp import jvp_odeint
 
-# def test_odeint_jvp_z():
-#     D = 10
-#     t0 = 0.1
-#     t1 = 0.2
-#     y0 = np.linspace(0.1, 0.9, D)
-#
-#     def f(y, t):
-#         return -np.sqrt(t) - y
-#
-#     @custom_transforms
-#     def onearg_odeint(y0):
-#         return odeint(f, y0, np.array([t0, t1]), atol=1e-8, rtol=1e-8)[1]
-#
-#     def onearg_jvp((y0,), (tangent_z,)):
-#         return jvp_odeint_z(tangent_z, f, y0, t0, t1)
-#     ad.defjvp(onearg_odeint.primitive, onearg_jvp)
-#
-#     check_jvp(onearg_odeint, onearg_jvp, (y0,))
 
-def test_odeint_jvp():
-    D = 10
-    t0 = 0.1
-    t1 = 0.2
-    y0 = np.linspace(0.1, 0.9, D)
-    fargs = (0.1, 0.2)
-    def f(y, t, arg1, arg2):
-        return -np.sqrt(t) - y + arg1 - np.mean((y + arg2)**2)
+D = 4
+t0 = 0.1
+t1 = 0.11
+y0 = np.linspace(0.1, 0.9, D)
+fargs = (0.1, 0.2)
+def f(y, t, arg1, arg2):
+    return -np.sqrt(t) - np.sin(np.dot(y, arg1)) - np.mean((y + arg2)**2)
 
-    @custom_transforms
-    def odeint2(y0,t1,fargs):
+def test_odeint_jvp_z():
+
+    def odeint2(y0):
         return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8, rtol=1e-8)[1]
 
-    def odeint2_jvp((y0,t1,fargs), (tangent_z,tangent_t1,tangent_fargs)):
+    def odeint2_jvp((y0,), (tangent_z,)):
+        tangent_t1 = 0.
+        tangent_fargs = (0.,0.)
+        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,t0,tangent_t1,tangent_fargs))
+
+    check_jvp(odeint2, odeint2_jvp, (y0,))
+
+def test_odeint_jvp_t0():
+
+    def odeint2(t0):
+        return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8, rtol=1e-8)[1]
+
+    def odeint2_jvp((t0,), (tangent_t0,)):
+        tangent_z = np.zeros_like(y0)
+        tangent_fargs = (0.,0.)
+        tangent_t1 = 0.
+        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,tangent_t0,tangent_t1,tangent_fargs))
+
+    check_jvp(odeint2, odeint2_jvp, (t0,))
+
+def test_odeint_jvp_zt1():
+
+    def odeint2(y0,t1):
+        return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8, rtol=1e-8)[1]
+
+    def odeint2_jvp((y0,t1), (tangent_z,tangent_t1)):
+        tangent_fargs = (0.,0.)
         return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,t0,tangent_t1,tangent_fargs)) #t1 is dummy
-    ad.defjvp(odeint2.primitive, odeint2_jvp)
+
+    check_jvp(odeint2, odeint2_jvp, (y0,t1))
+    
+def test_odeint_jvp_fargs():
+
+    def odeint2(fargs):
+        return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8, rtol=1e-8)[1]
+
+    def odeint2_jvp((fargs,), (tangent_fargs,)):
+        tangent_z = np.zeros_like(y0)
+        tangent_t1 = 0. 
+        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,t0,tangent_t1,tangent_fargs)) 
+
+    check_jvp(odeint2, odeint2_jvp, (fargs,))
+
+def test_odeint_jvp():
+
+    def odeint2(y0,t1,fargs):
+        return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-12, rtol=1e-12)[1]
+
+    def odeint2_jvp((y0,t1,fargs), (tangent_z,tangent_t1,tangent_fargs)):
+        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,t0,tangent_t1,tangent_fargs)) #t0 is dummy
 
     check_jvp(odeint2, odeint2_jvp, (y0,t1,fargs))
-
-# def wip_odeint_jvp_all():  # change beginning of name to test_ when ready
-#     D = 10
-#     t0 = 0.1
-#     t1 = 0.2
-#     y0 = np.linspace(0.1, 0.9, D)
-#     fargs = (0.1, 0.2)
-#     def f(y, t, arg1, arg2):
-#         return -np.sqrt(t) - y + arg1 - np.mean((y + arg2)**2)
-#
-#     @custom_transforms
-#     def twoarg_odeint(y0, args):
-#         return odeint(f, y0, np.array([t0, t1]), args=args, atol=1e-8, rtol=1e-8)[1]
-#
-#     def twoarg_jvp((y0, args), tangent_all):
-#         return jvp_odeint_all(tangent_all, f, y0, t0, t1, args)
-#     ad.defjvp(twoarg_odeint.primitive, twoarg_jvp)
-#
-#     check_jvp(twoarg_odeint, twoarg_jvp, (y0, fargs))
-#     #check_grads(onearg_odeint, (y0, ), order=2)
-
-
 
