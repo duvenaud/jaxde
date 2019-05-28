@@ -21,7 +21,8 @@ from jaxde.odeint import odeint
 
 def jvp_odeint(func, (y0, t0, t1, fargs),(t_y0,t_t0,t_t1,t_fargs)):
 
-   init_state, unpack = ravel_pytree((y0, t_y0, -t_t0*func(y0,t0,*fargs)))  # get an un-concatenate function
+   init_state, unpack = ravel_pytree((y0, t_y0, np.zeros_like(y0)))  # get an un-concatenate function
+   # init_state, unpack = ravel_pytree((y0, t_y0, -t_t0*func(y0,t0,*fargs)))  # get an un-concatenate function
 
    def augmented_dynamics(augmented_state, t):
 
@@ -37,8 +38,9 @@ def jvp_odeint(func, (y0, t0, t1, fargs),(t_y0,t_t0,t_t1,t_fargs)):
 
    yt, jvp_y, jvp_theta = unpack(odeint(augmented_dynamics, init_state, np.array([t0, t1]))[1])
    jvp_t1 = t_t1*func(yt,t1,*fargs)
+   jvp_t0 = t_t0*func(yt,t1,*fargs)
 
-   return (yt, jvp_y+jvp_t1+jvp_theta)
+   return (yt, jvp_y+jvp_t1+jvp_theta-jvp_t0)
 
 
 # def jvp_odeint_all(tangent_all, func, y0, t0, t1, func_args):  # future version will take args, and [t]
