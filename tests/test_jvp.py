@@ -29,9 +29,10 @@ def test_odeint_jvp_z():
         return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8, rtol=1e-8)[1]
 
     def odeint2_jvp((y0,), (tangent_z,)):
+        tangent_t0 = 0.
         tangent_t1 = 0.
         tangent_fargs = (0.,0.)
-        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,t0,tangent_t1,tangent_fargs))
+        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,tangent_t0,tangent_t1,tangent_fargs))
 
     check_jvp(odeint2, odeint2_jvp, (y0,))
 
@@ -48,17 +49,19 @@ def test_odeint_jvp_t0():
 
     check_jvp(odeint2, odeint2_jvp, (t0,))
 
-def test_odeint_jvp_zt1():
+def test_odeint_jvp_t1():
 
-    def odeint2(y0,t1):
+    def odeint2(t1):
         return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8, rtol=1e-8)[1]
 
-    def odeint2_jvp((y0,t1), (tangent_z,tangent_t1)):
+    def odeint2_jvp((t1,), (tangent_t1,)):
+        tangent_z = np.zeros_like(y0)
         tangent_fargs = (0.,0.)
-        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,t0,tangent_t1,tangent_fargs)) #t1 is dummy
+        tangent_t0 = 0.
+        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,tangent_t0,tangent_t1,tangent_fargs)) #t1 is dummy
 
-    check_jvp(odeint2, odeint2_jvp, (y0,t1))
-    
+    check_jvp(odeint2, odeint2_jvp, (t1,))
+
 def test_odeint_jvp_fargs():
 
     def odeint2(fargs):
@@ -67,17 +70,18 @@ def test_odeint_jvp_fargs():
     def odeint2_jvp((fargs,), (tangent_fargs,)):
         tangent_z = np.zeros_like(y0)
         tangent_t1 = 0. 
-        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,t0,tangent_t1,tangent_fargs)) 
+        tangent_t0 = 0. 
+        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,tangent_t0,tangent_t1,tangent_fargs)) 
 
     check_jvp(odeint2, odeint2_jvp, (fargs,))
 
 def test_odeint_jvp():
 
-    def odeint2(y0,t1,fargs):
+    def odeint2(y0,t0,t1,fargs):
         return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-12, rtol=1e-12)[1]
 
-    def odeint2_jvp((y0,t1,fargs), (tangent_z,tangent_t1,tangent_fargs)):
-        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,t0,tangent_t1,tangent_fargs)) #t0 is dummy
+    def odeint2_jvp((y0,t0,t1,fargs), (tangent_z,tangent_t0,tangent_t1,tangent_fargs)):
+        return jvp_odeint(f,(y0,t0,t1,fargs), (tangent_z,tangent_t0,tangent_t1,tangent_fargs)) #t0 is dummy
 
-    check_jvp(odeint2, odeint2_jvp, (y0,t1,fargs))
+    check_jvp(odeint2, odeint2_jvp, (y0,t0,t1,fargs))
 
