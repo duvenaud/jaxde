@@ -29,7 +29,7 @@ def f(y, t, arg1, arg2):
 def test_odeint_jvp_z():
     def odeint2(y0):
         return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8,
-                      rtol=1e-8)[1]
+                      rtol=1e-8)
 
     def odeint2_jvp((y0, ), (tan_y, )):
         tan_t0 = 0.
@@ -44,7 +44,7 @@ def test_odeint_jvp_z():
 def test_odeint_jvp_t0():
     def odeint2(t0):
         return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8,
-                      rtol=1e-8)[1]
+                      rtol=1e-8)
 
     def odeint2_jvp((t0, ), (tan_t0, )):
         tan_y = np.zeros_like(y0)
@@ -59,7 +59,7 @@ def test_odeint_jvp_t0():
 def test_odeint_jvp_t1():
     def odeint2(t1):
         return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8,
-                      rtol=1e-8)[1]
+                      rtol=1e-8)
 
     def odeint2_jvp((t1, ), (tan_t1, )):
         tan_y = np.zeros_like(y0)
@@ -74,7 +74,7 @@ def test_odeint_jvp_t1():
 def test_odeint_jvp_fargs():
     def odeint2(fargs):
         return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8,
-                      rtol=1e-8)[1]
+                      rtol=1e-8)
 
     def odeint2_jvp((fargs, ), (tan_fargs, )):
         tan_y = np.zeros_like(y0)
@@ -89,7 +89,7 @@ def test_odeint_jvp_fargs():
 def test_odeint_jvp():
     def odeint2(y0, t0, t1, fargs):
         return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8,
-                      rtol=1e-8)[1]
+                      rtol=1e-8)
 
     def odeint2_jvp((y0, t0, t1, fargs), (tan_y, tan_t0, tan_t1, tan_fargs)):
         return jvp_odeint(f, (y0, t0, t1, fargs),
