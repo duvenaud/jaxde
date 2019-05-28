@@ -35,8 +35,8 @@ def test_odeint_jvp_z():
         tan_t0 = 0.
         tan_t1 = 0.
         tan_fargs = (0., 0.)
-        return jvp_odeint(f, (y0, t0, t1, fargs),
-                          (tan_y, tan_t0, tan_t1, tan_fargs))
+        return jvp_odeint(f, (y0, np.array([t0, t1]), fargs),
+                          (tan_y, np.array([tan_t0, tan_t1]), tan_fargs))
 
     check_jvp(odeint2, odeint2_jvp, (y0, ))
 
