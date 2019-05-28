@@ -9,34 +9,32 @@ from jaxde.odeint import odeint
 def jvp_odeint(func, (y0, t0, t1, fargs), (tan_y0, tan_t0, tan_t1, tan_fargs)):
 
     # get an un-concatenate function
-    init_state, unpack = ravel_pytree((y0, tan_y0, np.zeros_like(y0)))
+    init_state, unpack = ravel_pytree((y0, tan_y0))
 
     def augmented_dynamics(augmented_state, t):
 
-        # adj_theta for both t0 and args
-        y, adj_y, adj_theta = unpack(augmented_state)
+        # state and senstivity state
+        y, a = unpack(augmented_state)
 
-        # dynamics for adj_y state
-        func_yt = lambda y: func(y, t, *fargs)
-        dy_dt, jvp_a = jvp(func_yt, (y, ), (adj_y, ))
+        # combined dynamics
+        # dummy function to splat fargs 
+        # TODO: could just expect `func` to take params as tuple
+        func_flat = lambda y, t, fargs: func(y, t, *fargs)
+        dy_dt, da_dt = jvp(func_flat, (y, t, fargs), (a, tan_t0, tan_fargs))
 
-        # dynamics accumulating t0 and fargs
-        func_theta = lambda t, fargs: func(y, t, *fargs)  #rename
-        _, jvp_theta = jvp(func_theta, (t, fargs), (tan_t0, tan_fargs))
-
-        # pack back to give dynamics of adjoint state
-        return np.concatenate([dy_dt, jvp_a, jvp_theta])
+        # pack back to give dynamics of augmented_state
+        return np.concatenate([dy_dt, da_dt])
 
     # Solve augmented dynamics and return solution at t1
-    yt, jvp_y, jvp_theta = unpack(
-        odeint(augmented_dynamics, init_state, np.array([t0, t1]))[1])
+    aug_sol = odeint(augmented_dynamics, init_state, np.array([t0, t1]))[1]
+    yt, at = unpack(aug_sol)
 
     # Sensitivities of y(t1) wrt t0 and t1
     jvp_t0 = -tan_t0 * func(yt, t1, *fargs)
     jvp_t1 = tan_t1 * func(yt, t1, *fargs)
 
     # Combine sensitivities
-    return (yt, jvp_y + jvp_t1 + jvp_theta + jvp_t0)
+    return (yt, at + jvp_t1 + jvp_t0)
 
 
 #@custom_transforms #TODO: remove this?

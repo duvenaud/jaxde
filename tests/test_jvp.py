@@ -66,7 +66,7 @@ def test_odeint_jvp_t1():
         tan_fargs = (0., 0.)
         tan_t0 = 0.
         return jvp_odeint(f, (y0, t0, t1, fargs),
-                          (tan_y, tan_t0, tan_t1, tan_fargs))  #t1 is dummy
+                          (tan_y, tan_t0, tan_t1, tan_fargs))
 
     check_jvp(odeint2, odeint2_jvp, (t1, ))
 
@@ -88,11 +88,11 @@ def test_odeint_jvp_fargs():
 
 def test_odeint_jvp():
     def odeint2(y0, t0, t1, fargs):
-        return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-12,
-                      rtol=1e-12)[1]
+        return odeint(f, y0, np.array([t0, t1]), fargs, atol=1e-8,
+                      rtol=1e-8)[1]
 
     def odeint2_jvp((y0, t0, t1, fargs), (tan_y, tan_t0, tan_t1, tan_fargs)):
         return jvp_odeint(f, (y0, t0, t1, fargs),
-                          (tan_y, tan_t0, tan_t1, tan_fargs))  #t0 is dummy
+                          (tan_y, tan_t0, tan_t1, tan_fargs))
 
     check_jvp(odeint2, odeint2_jvp, (y0, t0, t1, fargs))
