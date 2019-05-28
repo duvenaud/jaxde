@@ -31,8 +31,7 @@ def jvp_odeint(func, (y0, t0, t1, fargs), (tan_y0, tan_t0, tan_t1, tan_fargs)):
     yt, at = unpack(aug_sol)
 
     # Sensitivities of y(t1) wrt t0 and t1
-    # jvp_t0 = -tan_t0 * func(yt, t1, *fargs)
-    jvp_t_total = (tan_t1-tan_t0) * func(yt, t1, *fargs)
+    jvp_t_total = (tan_t1 - tan_t0) * func(yt, t1, *fargs)
 
     # Combine sensitivities
     return (yt, at + jvp_t_total)
