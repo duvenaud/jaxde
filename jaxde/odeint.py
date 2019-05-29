@@ -135,10 +135,10 @@ def optimal_step_size(last_step, mean_error_ratio, safety=0.9, ifactor=10.0, dfa
     return last_step / factor
 
 
-def odeint(ofunc, y0, t, args=(), rtol=1e-7, atol=1e-9, return_evals=False):
+def odeint(ofunc, y0, t, fargs=(), rtol=1e-7, atol=1e-9, return_evals=False):
 
-    if len(args) > 0:
-        func = lambda y, t: ofunc(y, t, *args)
+    if len(fargs) > 0:
+        func = lambda y, t: ofunc(y, t, fargs)
     else:
         func = ofunc
 

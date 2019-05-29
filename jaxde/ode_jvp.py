@@ -13,17 +13,13 @@ def jvp_odeint(func, (y0, ts, fargs), (tan_y0, tan_ts, tan_fargs)):
     # get an un-concatenate function
     init_state, unpack = ravel_pytree((y0, tan_y0))
 
-    # dummy function to splat fargs
-    # TODO: could just expect `func` to take params as tuple
-    func_flat = lambda y, t, fargs: func(y, t, *fargs)
-
     def augmented_dynamics(augmented_state, t):
 
         # state and senstivity state
         y, a = unpack(augmented_state)
 
         # combined dynamics
-        dy_dt, da_dt = jvp(func_flat, (y, t, fargs), (a, tan_t0, tan_fargs))
+        dy_dt, da_dt = jvp(func, (y, t, fargs), (a, tan_t0, tan_fargs))
 
         # pack back to give dynamics of augmented_state
         return np.concatenate([dy_dt, da_dt])
@@ -33,7 +29,7 @@ def jvp_odeint(func, (y0, ts, fargs), (tan_y0, tan_ts, tan_fargs)):
     yt, at = unpack(aug_sol[1])
 
     # Sensitivities of y(t1) wrt t0 and t1
-    jvp_t_total = (tan_t1 - tan_t0) * func(yt, t1, *fargs)
+    jvp_t_total = (tan_t1 - tan_t0) * func(yt, t1, fargs)
 
     # Combine sensitivities
     return (np.array([y0, yt]), np.array([tan_y0, at + jvp_t_total]))

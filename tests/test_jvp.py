@@ -13,6 +13,8 @@ from jax import custom_transforms, ad
 from jaxde.odeint import odeint
 from jaxde.ode_jvp import jvp_odeint
 
+import pdb
+
 # Parameters for the test function
 #TODO: Test more functions
 D = 4
@@ -22,7 +24,7 @@ y0 = np.linspace(0.1, 0.9, D)
 fargs = (0.1, 0.2)
 
 
-def f(y, t, arg1, arg2):
+def f(y, t, (arg1,arg2)):
     return -np.sqrt(t) - np.sin(np.dot(y, arg1)) - np.mean((y + arg2)**2)
 
 
@@ -50,6 +52,7 @@ def test_odeint_jvp_t0():
         tan_y = np.zeros_like(y0)
         tan_fargs = (0., 0.)
         tan_t1 = 0.
+        pdb.set_trace()
         return jvp_odeint(f, (y0, t0, t1, fargs),
                           (tan_y, tan_t0, tan_t1, tan_fargs))
 
