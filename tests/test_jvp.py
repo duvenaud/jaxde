@@ -13,6 +13,8 @@ from jax import custom_transforms, ad
 from jaxde.odeint import odeint
 from jaxde.ode_jvp import jvp_odeint
 
+import pdb
+
 # Parameters for the test function
 #TODO: Test more functions
 D = 4
@@ -22,7 +24,7 @@ y0 = np.linspace(0.1, 0.9, D)
 fargs = (0.1, 0.2)
 
 
-def f(y, t, arg1, arg2):
+def f(y, t, (arg1,arg2)):
     return -np.sqrt(t) - np.sin(np.dot(y, arg1)) - np.mean((y + arg2)**2)
 
 

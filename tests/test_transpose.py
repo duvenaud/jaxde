@@ -25,7 +25,7 @@ y0 = np.linspace(0.1, 0.9, D)
 fargs = (0.1, 0.2)
 
 
-def f(y, t, arg1, arg2):
+def f(y, t, (arg1, arg2)):
     return -np.sqrt(t) - np.sin(np.dot(y, arg1)) - np.mean((y + arg2)**2)
 
 def test_odeint_2_linearize():
