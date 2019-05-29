@@ -4,7 +4,7 @@ from __future__ import print_function
 
 from functools import partial
 
-from jax import jit
+from jax import jit, custom_transforms
 import jax.numpy as np
 from jax.config import config
 config.update("jax_enable_x64", True)
@@ -135,6 +135,7 @@ def optimal_step_size(last_step, mean_error_ratio, safety=0.9, ifactor=10.0, dfa
     return last_step / factor
 
 
+@custom_transforms
 def odeint(y0, t, fargs=(), func=None, rtol=1e-7, atol=1e-9, return_evals=False):
 
     if t[1]==t[0]:

@@ -12,8 +12,8 @@ from jax import custom_transforms, ad
 from jax import jvp, linearize
 from jax import make_jaxpr
 
-from jaxde.odeint import odeint
-from jaxde.ode_jvp import jvp_odeint
+# from jaxde.odeint import odeint
+from jaxde.ode_jvp import jvp_odeint, odeint
 
 D = 4
 t0 = 0.1
@@ -36,13 +36,12 @@ def fwd_deriv(f):
   return df
 
 print(jvp(z, (t0,), (1.0,)))
-1/0
 
-g = z
-for i in range(5):
-    print(g(t0))
-    g = fwd_deriv(g)
-    # print(g(t0))
-    # jaxpr = make_jaxpr(g)(t0)
-    # print(jaxpr)  # uncomment to show the blowup
-    # print(len(jaxpr.eqns))
+# g = z
+# for i in range(5):
+#     print(g(t0))
+#     g = fwd_deriv(g)
+#     # print(g(t0))
+#     # jaxpr = make_jaxpr(g)(t0)
+#     # print(jaxpr)  # uncomment to show the blowup
+#     # print(len(jaxpr.eqns))
