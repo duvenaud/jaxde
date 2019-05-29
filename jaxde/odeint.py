@@ -137,6 +137,9 @@ def optimal_step_size(last_step, mean_error_ratio, safety=0.9, ifactor=10.0, dfa
 
 def odeint(y0, t, fargs=(), func=None, rtol=1e-7, atol=1e-9, return_evals=False):
 
+    if t[1]==t[0]:
+        return np.stack([y0,y0])
+
     if len(fargs) > 0:
         ofunc = lambda y, t: func(y, t, fargs)
     else:
@@ -148,7 +151,7 @@ def odeint(y0, t, fargs=(), func=None, rtol=1e-7, atol=1e-9, return_evals=False)
         t = -t
         reversed_ofunc = ofunc
         ofunc = lambda y, t: -reversed_func(y, -t)
-    assert np.all(t[1:] > t[:-1]), 't must be strictly increasing or decreasing'
+    assert np.all(t[1:] >= t[:-1]), 't must be increasing or decreasing'
 
     f0 = ofunc(y0, t[0])
     dt = initial_step_size(ofunc, t[0], y0, 4, rtol, atol, f0)

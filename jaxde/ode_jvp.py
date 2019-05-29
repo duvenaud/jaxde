@@ -7,6 +7,7 @@ from jaxde.odeint import odeint
 
 
 def jvp_odeint((y0, ts, fargs), (tan_y0, tan_ts, tan_fargs), func=None):
+    print("jvpodeint!")
     t0, t1 = ts
     tan_t0, tan_t1 = tan_ts
 
@@ -34,9 +35,8 @@ def jvp_odeint((y0, ts, fargs), (tan_y0, tan_ts, tan_fargs), func=None):
     # Combine sensitivities
     return (np.array([y0, yt]), np.array([tan_y0, at + jvp_t_total]))
 
-
-odeint_prim = custom_transforms(odeint).primitive
-ad.defjvp(odeint_prim, jvp_odeint)
+odeint = custom_transforms(odeint)
+ad.defjvp(odeint.primitive, jvp_odeint)
 
 
 #@custom_transforms #TODO: remove this?
