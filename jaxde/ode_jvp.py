@@ -13,7 +13,9 @@ def jvp_odeint((y0, ts, fargs), (tan_y0, tan_ts, tan_fargs), func=None):
 
     # TODO: maybe avoid instantiating zeros in some cases
     tan_t0 = ad.instantiate_zeros(t0, tan_t0)
-    # tan_fargs = ad.instantiate_zeros(fargs, tan_fargs)
+    if tan_fargs is ad_util.zero:
+      zeros = (ad_util.zero,) * len(fargs)
+      tan_fargs = tuple(map(ad.instantiate_zeros, fargs, zeros))
 
     # get an un-concatenate function
     init_state, unpack = ravel_pytree((y0, tan_y0))

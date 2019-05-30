@@ -37,11 +37,11 @@ def fwd_deriv(f):
 
 print(jvp(z, (t0,), (1.0,)))
 
-# g = z
-# for i in range(5):
-#     print(g(t0))
-#     g = fwd_deriv(g)
-#     # print(g(t0))
-#     # jaxpr = make_jaxpr(g)(t0)
-#     # print(jaxpr)  # uncomment to show the blowup
-#     # print(len(jaxpr.eqns))
+g = z
+for i in range(5):
+    print(g(t0))
+    g = fwd_deriv(g)
+    # print(g(t0))
+    # jaxpr = make_jaxpr(g)(t0)
+    # print(jaxpr)  # uncomment to show the blowup
+    # print(len(jaxpr.eqns))
