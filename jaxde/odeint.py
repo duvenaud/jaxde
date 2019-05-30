@@ -4,7 +4,7 @@ from __future__ import print_function
 
 from functools import partial
 
-from jax import jit
+from jax import jit, custom_transforms
 import jax.numpy as np
 from jax.config import config
 config.update("jax_enable_x64", True)
@@ -135,23 +135,27 @@ def optimal_step_size(last_step, mean_error_ratio, safety=0.9, ifactor=10.0, dfa
     return last_step / factor
 
 
-def odeint(ofunc, y0, t, fargs=(), rtol=1e-7, atol=1e-9, return_evals=False):
+@custom_transforms
+def odeint(y0, t, fargs=(), func=None, rtol=1e-7, atol=1e-9, return_evals=False):
+
+    if t[1]==t[0]:
+        return np.stack([y0,y0])
 
     if len(fargs) > 0:
-        func = lambda y, t: ofunc(y, t, fargs)
+        ofunc = lambda y, t: func(y, t, fargs)
     else:
-        func = ofunc
+        ofunc = func
 
     # Reverse time if necessary.
     t = np.array(t)
     if t[-1] < t[0]:
         t = -t
-        reversed_func = func
-        func = lambda y, t: -reversed_func(y, -t)
-    assert np.all(t[1:] > t[:-1]), 't must be strictly increasing or decreasing'
+        reversed_ofunc = ofunc
+        ofunc = lambda y, t: -reversed_func(y, -t)
+    assert np.all(t[1:] >= t[:-1]), 't must be increasing or decreasing'
 
-    f0 = func(y0, t[0])
-    dt = initial_step_size(func, t[0], y0, 4, rtol, atol, f0)
+    f0 = ofunc(y0, t[0])
+    dt = initial_step_size(ofunc, t[0], y0, 4, rtol, atol, f0)
     interp_coeff = np.array([y0] * 5)
 
     solution = [y0]
@@ -169,7 +173,7 @@ def odeint(ofunc, y0, t, fargs=(), rtol=1e-7, atol=1e-9, return_evals=False):
             assert next_t > cur_t, 'underflow in dt {}'.format(dt)
 
             next_y, next_f, next_y_error, k =\
-                runge_kutta_step(func, cur_y, cur_f, cur_t, dt)
+                runge_kutta_step(ofunc, cur_y, cur_f, cur_t, dt)
             error_ratios = error_ratio(next_y_error, atol, rtol, cur_y, next_y)
 
             if np.all(error_ratios <= 1):  # Accept the step?
