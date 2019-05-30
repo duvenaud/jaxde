@@ -9,9 +9,11 @@ config.update("jax_enable_x64", True)
 
 from jax.test_util import check_grads, check_jvp
 from jax import custom_transforms, ad
+from jax import jvp
+from functools import partial
 
 from jaxde.odeint import odeint
-from jaxde.ode_jvp import jvp_odeint
+# from jaxde.ode_jvp import jvp_odeint
 
 import pdb
 
@@ -20,6 +22,7 @@ import pdb
 D = 4
 t0 = 0.1
 t1 = 0.11
+ts = np.array([t0,t1])
 y0 = np.linspace(0.1, 0.9, D)
 fargs = (0.1, 0.2)
 
@@ -29,17 +32,17 @@ def f(y, t, (arg1, arg2)):
 
 
 def test_odeint_jvp():
-    def odeint2(y0, t0, t1, fargs):
+    def odeint2(y0, ts, fargs):
         return odeint(y0,
-                      np.array([t0, t1]),
+                      ts,
                       fargs,
                       func=f,
                       atol=1e-8,
                       rtol=1e-8)
 
-    def odeint2_jvp((y0, t0, t1, fargs), (tan_y, tan_t0, tan_t1, tan_fargs)):
-        return jvp_odeint((y0, np.array([t0, t1]), fargs),
-                          (tan_y, np.array([tan_t0, tan_t1]), tan_fargs),
-                          func=f)
+    def odeint2_jvp((y0, ts, fargs), (tan_y, tan_ts, tan_fargs)):
+        jvp_odeint = partial(jvp,odeint2)
+        return jvp_odeint((y0, ts, fargs),
+                          (tan_y, tan_ts, tan_fargs))
 
-    check_jvp(odeint2, odeint2_jvp, (y0, t0, t1, fargs))
+    check_jvp(odeint2, odeint2_jvp, (y0, ts, fargs))
