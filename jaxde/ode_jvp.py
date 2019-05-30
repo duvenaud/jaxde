@@ -7,10 +7,12 @@ from jaxde.odeint import odeint
 
 
 def jvp_odeint((y0, ts, fargs), (tan_y0, tan_ts, tan_fargs), func=None):
+
     t0, t1 = ts
     tan_t0, tan_t1 = tan_ts
-
+    
     # TODO: maybe avoid instantiating zeros in some cases
+    tan_y0 = ad.instantiate_zeros(y0, tan_y0)
     tan_t0 = ad.instantiate_zeros(t0, tan_t0)
     if tan_fargs is ad_util.zero:
       zeros = (ad_util.zero,) * len(fargs)
@@ -40,7 +42,6 @@ def jvp_odeint((y0, ts, fargs), (tan_y0, tan_ts, tan_fargs), func=None):
 
     # Combine sensitivities
     tan_yt = jvp_t_total if at is ad_util.zero else at + jvp_t_total
-    tan_y0 = ad.instantiate_zeros(yt, tan_y0)
     return (np.array([y0, yt]), np.array([tan_y0, tan_yt]))
 
 ad.primitive_jvps[odeint.primitive] = jvp_odeint
