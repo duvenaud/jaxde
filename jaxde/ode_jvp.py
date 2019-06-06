@@ -10,6 +10,8 @@ def jvp_odeint((y0, ts, fargs), (tan_y0, tan_ts, tan_fargs), func=None):
 
     t0, t1 = ts
     tan_t0, tan_t1 = tan_ts
+
+    print("ts z: ",ts)
     
     # TODO: maybe avoid instantiating zeros in some cases
     tan_y0 = ad.instantiate_zeros(y0, tan_y0)
