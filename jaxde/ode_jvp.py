@@ -6,8 +6,9 @@ from jax import ad, ad_util
 from jaxde.odeint import odeint
 
 
-def jvp_odeint((y0, ts, fargs), (tan_y0, tan_ts, tan_fargs), func=None):
-
+def jvp_odeint(primals, tangents, func=None):
+    (y0, ts, fargs) = primals
+    (tan_y0, tan_ts, tan_fargs) = tangents
     t0, t1 = ts
     tan_t0, tan_t1 = tan_ts
 
@@ -37,6 +38,7 @@ def jvp_odeint((y0, ts, fargs), (tan_y0, tan_ts, tan_fargs), func=None):
 
     # Solve augmented dynamics
     aug_sol = odeint(init_state, np.array([t0, t1]), fargs, func=augmented_dynamics)
+    # aug_sol = odeint(augmented_dynamics,init_state, np.array([t0, t1]), fargs)
     yt, at = unpack(aug_sol[1])
 
     # Sensitivities of y(t1) wrt t0 and t1
@@ -46,4 +48,4 @@ def jvp_odeint((y0, ts, fargs), (tan_y0, tan_ts, tan_fargs), func=None):
     tan_yt = jvp_t_total if at is ad_util.zero else at + jvp_t_total
     return (np.array([y0, yt]), np.array([tan_y0, tan_yt]))
 
-ad.primitive_jvps[odeint.primitive] = jvp_odeint
+ad.primitive_jvps[odeint.prim] = jvp_odeint
